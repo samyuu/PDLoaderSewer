@@ -1,10 +1,10 @@
 #include "Types.h"
 #include "SprTexReplace.h"
 #include "Addresses.h"
+#include "FunctionHooker.h"
 #include "UTF8.h"
 #include "Path.h"
 #include "Log.h"
-#include "FunctionHooker.h"
 
 namespace SprTexReplace
 {
@@ -14,7 +14,7 @@ namespace SprTexReplace
 		functionHooker.Hook(Addresses::SprSetParseTexSet, EvilGlobalState.OriginalParseSprSetTexSet, Hooks::SprSetParseTexSet);
 
 		const auto glGenTexturesHook = &Hooks::GLGenTextures;
-		WriteToProtectedMemory(Addresses::GLGenTexturesExtern, sizeof(void*), &glGenTexturesHook);
+		WriteToProtectedMemory(Addresses::GLGenTexturesExtern, sizeof(glGenTexturesHook), &glGenTexturesHook);
 	}
 
 	void OnDLLAttach(const HMODULE moduleHandle)

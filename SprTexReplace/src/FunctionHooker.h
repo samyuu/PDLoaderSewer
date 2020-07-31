@@ -39,10 +39,10 @@ namespace SprTexReplace
 		}
 
 		template <typename Func>
-		void Hook(const u64 address, Func*& inOutOriginalFunc, Func& onHookFunc)
+		void Hook(const u64 address, Func*& outOriginalFunc, Func& onHookFunc)
 		{
-			inOutOriginalFunc = reinterpret_cast<Func*>(address);
-			::DetourAttach(reinterpret_cast<PVOID*>(&inOutOriginalFunc), &onHookFunc);
+			outOriginalFunc = reinterpret_cast<Func*>(address);
+			::DetourAttach(reinterpret_cast<PVOID*>(&outOriginalFunc), &onHookFunc);
 		}
 	};
 }

@@ -6,7 +6,7 @@
 #include <gl/GL.h>
 #include <filesystem>
 
-#pragma comment (lib, "opengl32.lib")
+#pragma comment(lib, "opengl32.lib")
 
 namespace SprTexReplace
 {
@@ -16,6 +16,36 @@ namespace SprTexReplace
 	{
 		constexpr auto reasonablePerSprSetMaxTextureCount = 128;
 		InterceptedGLTextureIDs.reserve(reasonablePerSprSetMaxTextureCount);
+	}
+
+	namespace
+	{
+		constexpr bool StartsWith(std::string_view string, std::string_view prefix)
+		{
+			return (string.size() >= prefix.size() && string.substr(0, prefix.size()) == prefix);
+		}
+
+		void TryRegisterSprTexReplacePath(const std::filesystem::path& texturePath, std::vector<SprTexInfo>& outResults)
+		{
+			const auto textureFileName = texturePath.filename().u8string();
+			if (!SourceImage::IsValidFileName(textureFileName))
+				return;
+
+			auto& sprTexInfo = outResults.emplace_back();
+			sprTexInfo.TextureName = std::string(Path::TrimExtension(textureFileName));
+			sprTexInfo.ImageSourcePath = texturePath.u8string();
+		}
+
+		void TryRegisterSprSetReplaceDirectory(const std::filesystem::path& sprSetDirectory, std::vector<SprSetInfo>& outResults)
+		{
+			auto directoryName = sprSetDirectory.filename().u8string();
+			if (!StartsWith(directoryName, "spr_") && !StartsWith(directoryName, "SPR_"))
+				return;
+
+			auto& sprSetInfo = outResults.emplace_back(SprSetInfo { std::move(directoryName) });
+			for (const auto sprTexPath : std::filesystem::directory_iterator(sprSetDirectory))
+				TryRegisterSprTexReplacePath(sprTexPath.path(), sprSetInfo.Textures);
+		}
 	}
 
 	void PluginState::UpdateWorkingDirectoryFilesAsync()
@@ -29,24 +59,8 @@ namespace SprTexReplace
 
 			try
 			{
-				for (const auto sprSetPathIt : std::filesystem::directory_iterator(directoryToSerachPath))
-				{
-					const auto sprSetPath = sprSetPathIt.path();
-
-					auto& sprSetInfo = results.emplace_back(SprSetInfo { sprSetPath.filename().u8string() });
-					for (const auto sprTexPathIt : std::filesystem::directory_iterator(sprSetPathIt.path()))
-					{
-						const auto sprTexPath = sprTexPathIt.path();
-						const auto sprTexPathFileName = sprTexPath.filename().u8string();
-
-						if (!SourceImage::IsValidFileName(sprTexPathFileName))
-							continue;
-
-						auto& sprTexInfo = sprSetInfo.Textures.emplace_back();
-						sprTexInfo.TextureName = std::string(Path::TrimExtension(sprTexPathFileName));
-						sprTexInfo.ImageSourcePath = sprTexPath.u8string();
-					}
-				}
+				for (const auto sprSetDirectory : std::filesystem::directory_iterator(directoryToSerachPath))
+					TryRegisterSprSetReplaceDirectory(sprSetDirectory.path(), results);
 			}
 			catch (const std::exception& ex)
 			{
@@ -79,7 +93,7 @@ namespace SprTexReplace
 			return (found != EvilGlobalState.RegisteredReplaceInfo.end()) ? &(*found) : nullptr;
 		}
 
-		const SprTexInfo* FindSprTexInfo(const SprSet& sprSet, size_t texIndex, const SprSetInfo& setInfo)
+		const SprTexInfo* FindSprTexInfo(const SprSet& sprSet, const size_t texIndex, const SprSetInfo& setInfo)
 		{
 			const auto textureName = sprSet.GetTextureName(texIndex);
 			const auto found = std::find_if(
@@ -90,7 +104,7 @@ namespace SprTexReplace
 			return (found != setInfo.Textures.end()) ? &(*found) : nullptr;
 		}
 
-		bool UpdateTempSourceImageBuffer(SprSet& sprSet, const SprSetInfo& setInfo)
+		bool UpdateTempSourceImageBuffer(const SprSet& sprSet, const SprSetInfo& setInfo)
 		{
 			const auto textureCount = sprSet.GetTextureCount();
 
@@ -137,9 +151,9 @@ namespace SprTexReplace
 			}
 		}
 
-		void UploadSourceImageToGLTexture(SourceImage& sourceImage, u32 glTextureID)
+		void UploadSourceImageToGLTexture(SourceImage& sourceImage, const u32 glTextureID)
 		{
-			// BUG: Potential bug if the source image failes to load but the YCbCr texture have already been edited
+			// BUG: Potential bug if the source image failes to load but the YCbCr textures have already been pre-load edited
 			const auto imageView = sourceImage.GetImageView();
 
 			if (imageView.Data == nullptr || imageView.Width < 1 || imageView.Height < 1)
@@ -162,7 +176,7 @@ namespace SprTexReplace
 			if (const auto error = ::glGetError(); error != GL_NO_ERROR) {}
 		}
 
-		void DoSprSetTexReplacementsPostLoad(SprSet& sprSet)
+		void DoSprSetTexReplacementsPostLoad(const SprSet& sprSet)
 		{
 			const auto textureCount = sprSet.GetTextureCount();
 			for (size_t i = 0; i < textureCount; i++)
