@@ -37,7 +37,7 @@ namespace SprTexReplace
 		std::string SprTexReplaceSubDirectory = "plugins/spr_tex_replace";
 		std::string WorkingDirectory;
 
-		// GLGenTextures_t* OriginalGLGenTextures = nullptr;
+		GLGenTextures_t* OriginalGLGenTextures = nullptr;
 		SprSetParseTexSet_t* OriginalParseSprSetTexSet = nullptr;
 
 		bool GenTexturesHookEnabled = false;

@@ -203,7 +203,8 @@ namespace SprTexReplace::Hooks
 {
 	void __stdcall GLGenTextures(i32 count, u32* outGLTexIDs)
 	{
-		::glGenTextures(count, outGLTexIDs);
+		assert(EvilGlobalState.OriginalGLGenTextures != nullptr);
+		EvilGlobalState.OriginalGLGenTextures(count, outGLTexIDs);
 
 		if (EvilGlobalState.GenTexturesHookEnabled)
 		{
