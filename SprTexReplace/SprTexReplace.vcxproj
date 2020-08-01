@@ -25,6 +25,9 @@
     <ClInclude Include="src\SprTexReplace.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Dependencies\DirectXTex\DirectXTex.vcxproj">
+      <Project>{0895c15f-ef9c-4d4f-9a41-f62c197922dc}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\PluginCommon\PluginCommon.vcxproj">
       <Project>{b98e3de5-ef06-4bf3-aeb0-b3f3b2d815a1}</Project>
     </ProjectReference>
@@ -78,7 +81,7 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\detours\include;$(SolutionDir)Dependencies\stb_image\include;$(SolutionDir)PluginCommon\src;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\detours\include;$(SolutionDir)Dependencies\DirectXTex\include;$(SolutionDir)Dependencies\stb_image\include;$(SolutionDir)PluginCommon\src;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <AdditionalOptions>-d2FH4-</AdditionalOptions>
@@ -99,7 +102,7 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\detours\include;$(SolutionDir)Dependencies\stb_image\include;$(SolutionDir)PluginCommon\src;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\detours\include;$(SolutionDir)Dependencies\DirectXTex\include;$(SolutionDir)Dependencies\stb_image\include;$(SolutionDir)PluginCommon\src;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <AdditionalOptions>-d2FH4-</AdditionalOptions>
