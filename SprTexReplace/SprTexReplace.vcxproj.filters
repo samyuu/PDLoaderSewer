@@ -30,6 +30,9 @@
     <ClCompile Include="src\SourceImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GLTextureUpload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SprTexReplace.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\FunctionHooker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLTextureUpload.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

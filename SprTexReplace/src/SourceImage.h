@@ -2,6 +2,7 @@
 #include "Types.h"
 #include <string>
 #include <future>
+#include <DirectXTex.h>
 
 namespace SprTexReplace
 {
@@ -20,9 +21,8 @@ namespace SprTexReplace
 			i32 Width;
 			i32 Height;
 			const void* Data;
-
-			// TODO:
-			enum class PixelFormat {} Format;
+			u32 DataSize;
+			::DXGI_FORMAT Format;
 		};
 
 		ImageView GetImageView();
@@ -37,5 +37,11 @@ namespace SprTexReplace
 			u8* RGBAPixels;
 			i32 Width, Height, Components;
 		} stbImage = {};
+
+		struct DDSImageData
+		{
+			::DirectX::ScratchImage Image;
+			::DirectX::TexMetadata Metatdata;
+		} dds = {};
 	};
 }

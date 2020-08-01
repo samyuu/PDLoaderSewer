@@ -1,12 +1,9 @@
 #include "SprTexReplace.h"
+#include "GLTextureUpload.h"
 #include "Path.h"
 #include "UTF8.h"
 #include "Log.h"
-#include <Windows.h>
-#include <gl/GL.h>
 #include <filesystem>
-
-#pragma comment(lib, "opengl32.lib")
 
 namespace SprTexReplace
 {
@@ -164,16 +161,7 @@ namespace SprTexReplace
 				return;
 			}
 
-			::glBindTexture(GL_TEXTURE_2D, glTextureID);
-			if (const auto error = ::glGetError(); error != GL_NO_ERROR) {}
-
-			// TODO: Support DDS together with BC7 :PogU:
-			::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageView.Width, imageView.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageView.Data);
-			if (const auto error = ::glGetError(); error != GL_NO_ERROR) {}
-
-			// NOTE: No need to store the previously bound texture as the original upload function should reset to 0 itself
-			::glBindTexture(GL_TEXTURE_2D, 0);
-			if (const auto error = ::glGetError(); error != GL_NO_ERROR) {}
+			GLBindUploadImageViewTextureData(sourceImage, imageView, glTextureID);
 		}
 
 		void DoSprSetTexReplacementsPostLoad(const SprSet& sprSet)

@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EntryPoint.cpp" />
+    <ClCompile Include="src\GLTextureUpload.cpp" />
     <ClCompile Include="src\SourceImage.cpp" />
     <ClCompile Include="src\SprSet.cpp" />
     <ClCompile Include="src\SprTexReplace.cpp" />
@@ -20,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="src\Addresses.h" />
     <ClInclude Include="src\FunctionHooker.h" />
+    <ClInclude Include="src\GLTextureUpload.h" />
     <ClInclude Include="src\SourceImage.h" />
     <ClInclude Include="src\SprSet.h" />
     <ClInclude Include="src\SprTexReplace.h" />

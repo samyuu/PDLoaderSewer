@@ -8,6 +8,8 @@
 namespace SprTexReplace
 {
 	using GLGenTextures_t = void __stdcall (i32, u32*);
+	using GLCompressedTexImage2D_t = void __stdcall (i32 target, i32 level, u32 internalFormat, i32 width, i32 height, i32 border, i32 imageSize, const void* data);
+
 	using GetFileContent_t = u8 * __fastcall (const void* handle);
 	using SprSetParseTexSet_t = int __cdecl (SprSet* thisSprSet);
 

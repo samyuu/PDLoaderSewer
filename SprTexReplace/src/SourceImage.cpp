@@ -1,5 +1,6 @@
 #include "SourceImage.h"
 #include "Path.h"
+#include "UTF8.h"
 #include <stb_image.h>
 
 namespace SprTexReplace
@@ -23,7 +24,13 @@ namespace SprTexReplace
 		}
 		else if (extension == ".dds")
 		{
-			// TODO: DDS support
+			loadFuture = std::async(std::launch::async, [this]()
+			{
+				// NOTE: Unlike pngs DDS are expected to be stored flipped in the OpenGL texture coordinate convention.
+				//		 Manually flipping the texture blocks would decrease performance and'd be quite tricky in the case of BC7
+				if (FAILED(::DirectX::LoadFromDDSFile(UTF8::WideArg(filePath).c_str(), ::DirectX::DDS_FLAGS_NONE, &dds.Metatdata, dds.Image)))
+					dds = {};
+			});
 		}
 	}
 
@@ -33,13 +40,7 @@ namespace SprTexReplace
 			loadFuture.get();
 
 		if (stbImage.RGBAPixels != nullptr)
-		{
 			stbi_image_free(stbImage.RGBAPixels);
-		}
-		else
-		{
-			// TODO: DDS support
-		}
 	}
 
 	SourceImage::ImageView SourceImage::GetImageView()
@@ -47,21 +48,26 @@ namespace SprTexReplace
 		if (loadFuture.valid())
 			loadFuture.get();
 
-		auto imageData = ImageView {};
+		auto imageView = ImageView {};
 
 		if (stbImage.RGBAPixels != nullptr)
 		{
-			imageData.Width = stbImage.Width;
-			imageData.Height = stbImage.Height;
-			imageData.Data = stbImage.RGBAPixels;
-			imageData.Format = {};
+			imageView.Width = stbImage.Width;
+			imageView.Height = stbImage.Height;
+			imageView.Data = stbImage.RGBAPixels;
+			imageView.DataSize = (imageView.Width * imageView.Height * 4);
+			imageView.Format = ::DXGI_FORMAT_R8G8B8A8_UNORM;
 		}
-		else
+		else if (auto baseImage = dds.Image.GetImage(0, 0, 0); baseImage != nullptr)
 		{
-			// TODO: DDS support
+			imageView.Width = static_cast<i32>(baseImage->width);
+			imageView.Height = static_cast<i32>(baseImage->height);
+			imageView.Data = baseImage->pixels;
+			imageView.DataSize = static_cast<u32>(baseImage->slicePitch);
+			imageView.Format = baseImage->format;
 		}
 
-		return imageData;
+		return imageView;
 	}
 
 	std::string_view SourceImage::GetFilePath() const
