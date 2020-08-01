@@ -218,6 +218,8 @@ namespace SprTexReplace::Hooks
 
 		DoSprSetTexReplacementsPreLoad(*thisSprSet);
 
+		// TODO: Before calling the original function it'd me a lot more efficient to prevent it from uploading its own data for the textures that are known to be replaced. 
+		//		 Doing that should be as simple as also hooking the uploader sub function(s) and checking against the currently uploaded texture
 		EvilGlobalState.InterceptedGLTextureIDs.clear();
 		EvilGlobalState.GenTexturesHookEnabled = true;
 		const auto originalReturnValue = EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
