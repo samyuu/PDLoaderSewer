@@ -47,17 +47,17 @@ namespace SprTexReplace
 
 	void PluginState::WaitForAsyncDirectoryUpdate()
 	{
-		if (EvilGlobalState.RegisteredReplaceInfoFuture.valid())
-			EvilGlobalState.RegisteredReplaceInfo = std::move(EvilGlobalState.RegisteredReplaceInfoFuture.get());
+		if (RegisteredReplaceInfoFuture.valid())
+			RegisteredReplaceInfo = std::move(RegisteredReplaceInfoFuture.get());
 	}
 
-	void PluginState::UpdateWorkingDirectoryFilesAsync()
+	void PluginState::IterateRegisterReplaceDirectoryFilePathsAsync()
 	{
-		EvilGlobalState.RegisteredReplaceInfoFuture = std::async(std::launch::async, []
+		RegisteredReplaceInfoFuture = std::async(std::launch::async, [this]
 		{
 			std::vector<SprSetInfo> results;
 
-			const auto directoryToSerach = (EvilGlobalState.WorkingDirectory + "/" + EvilGlobalState.SprTexReplaceSubDirectory);
+			const auto directoryToSerach = (WorkingDirectory + "/" + SprTexReplaceSubDirectory);
 			const auto directoryToSerachPath = std::filesystem::path(UTF8::WideArg(directoryToSerach).c_str());
 
 			try
@@ -79,29 +79,29 @@ namespace SprTexReplace
 {
 	namespace
 	{
-		const SprSetInfo* FindSprSetInfo(const SprSet& sprSet)
+		const SprSetInfo* FindMatchingSprSetReplaceInfo(const SprSet& sprSet)
 		{
-			const auto sprSetName = sprSet.GetSprName();
+			const auto setNameToFind = sprSet.GetSprName();
 			const auto found = std::find_if(
 				EvilGlobalState.RegisteredReplaceInfo.begin(),
 				EvilGlobalState.RegisteredReplaceInfo.end(),
-				[&](const auto& info) { return (info.SetName == sprSetName); });
+				[&](const auto& info) { return (info.SetName == setNameToFind); });
 
-			return (found != EvilGlobalState.RegisteredReplaceInfo.end()) ? &(*found) : nullptr;
+			return (found != EvilGlobalState.RegisteredReplaceInfo.end() && !found->Textures.empty()) ? &(*found) : nullptr;
 		}
 
-		const SprTexInfo* FindSprTexInfo(const SprSet& sprSet, const size_t texIndex, const SprSetInfo& setInfo)
+		const SprTexInfo* FindMatchingSprTexReplaceInfo(const SprSet& sprSet, const size_t texIndex, const SprSetInfo& setInfo)
 		{
-			const auto textureName = sprSet.GetTextureName(texIndex);
+			const auto textureNameToFind = sprSet.GetTextureName(texIndex);
 			const auto found = std::find_if(
 				setInfo.Textures.begin(),
 				setInfo.Textures.end(),
-				[&](const auto& info) { return (info.TextureName == textureName); });
+				[&](const auto& info) { return (info.TextureName == textureNameToFind); });
 
 			return (found != setInfo.Textures.end()) ? &(*found) : nullptr;
 		}
 
-		bool UpdateTempSourceImageBuffer(const SprSet& sprSet, const SprSetInfo& setInfo)
+		bool LoadSourceImagesIntoTempBuffer(const SprSet& sprSet, const SprSetInfo& setInfo)
 		{
 			const auto textureCount = sprSet.GetTextureCount();
 
@@ -109,15 +109,16 @@ namespace SprTexReplace
 			EvilGlobalState.TempSourceImageBuffer.reserve(textureCount);
 
 			bool anyFound = false;
-			for (size_t i = 0; i < textureCount; i++)
+			for (size_t textureIndex = 0; textureIndex < textureCount; textureIndex++)
 			{
-				const auto replaceInfo = FindSprTexInfo(sprSet, i, setInfo);
+				const auto replaceInfo = FindMatchingSprTexReplaceInfo(sprSet, textureIndex, setInfo);
 				if (replaceInfo == nullptr)
 				{
 					EvilGlobalState.TempSourceImageBuffer.emplace_back(nullptr);
 				}
 				else
 				{
+					// TODO: Instead of loading textures just in time it'd be a lot more favorable to load them at the same time the original farc is read
 					EvilGlobalState.TempSourceImageBuffer.emplace_back(std::make_unique<SourceImage>(replaceInfo->ImageSourcePath));
 					anyFound = true;
 				}
@@ -126,25 +127,30 @@ namespace SprTexReplace
 			return anyFound;
 		}
 
+		void PreventYCbCrTextureDetection(SprSet& sprSet, const size_t textureIndex)
+		{
+			sprSet.ForEachMipMap(textureIndex, [&](SprSet::TextureData& texture, SprSet::MipMapData& mipMap)
+			{
+				// NOTE: Prevent YCbCr detection and it's multiple mipmaps messing up the plugin replaced textures
+				if (texture.MipLevels == 2 && mipMap.Format == TextureFormat::RGTC2)
+				{
+					// NOTE: Change to DXT5 because it uses the same block size
+					mipMap.Format = TextureFormat::DXT5;
+
+					if (mipMap.MipIndex == 1)
+						texture.MipMapCount = texture.MipLevels = 1;
+				}
+			});
+		}
+
 		void DoSprSetTexReplacementsPreLoad(SprSet& sprSet)
 		{
-			for (size_t i = 0; i < sprSet.GetTextureCount(); i++)
+			for (size_t textureIndex = 0; textureIndex < sprSet.GetTextureCount(); textureIndex++)
 			{
-				if (EvilGlobalState.TempSourceImageBuffer[i] == nullptr)
+				if (EvilGlobalState.TempSourceImageBuffer[textureIndex] == nullptr)
 					continue;
 
-				sprSet.ForEachMipMap(i, [&](SprSet::TextureData& texture, SprSet::MipMapData& mipMap)
-				{
-					// NOTE: Prevent YCbCr detection messing up the overwriten textures
-					if (texture.MipLevels == 2 && mipMap.Format == TextureFormat::RGTC2)
-					{
-						// NOTE: Change to DXT5 because it uses the same block size
-						mipMap.Format = TextureFormat::DXT5;
-
-						if (mipMap.MipIndex == 1)
-							texture.MipMapCount = texture.MipLevels = 1;
-					}
-				});
+				PreventYCbCrTextureDetection(sprSet, textureIndex);
 			}
 		}
 
@@ -167,17 +173,17 @@ namespace SprTexReplace
 		void DoSprSetTexReplacementsPostLoad(const SprSet& sprSet)
 		{
 			const auto textureCount = sprSet.GetTextureCount();
-			for (size_t i = 0; i < textureCount; i++)
+			for (size_t textureIndex = 0; textureIndex < textureCount; textureIndex++)
 			{
-				auto sourceImage = EvilGlobalState.TempSourceImageBuffer[i].get();
+				auto sourceImage = EvilGlobalState.TempSourceImageBuffer[textureIndex].get();
 				if (sourceImage == nullptr)
 					continue;
 
-				const auto glTextureIndex = EvilGlobalState.InterceptedGLTextureIDs.size() - textureCount + i;
-				if (glTextureIndex >= EvilGlobalState.InterceptedGLTextureIDs.size())
+				const auto interceptedIndex = EvilGlobalState.InterceptedGLTextureIDs.size() - textureCount + textureIndex;
+				if (interceptedIndex >= EvilGlobalState.InterceptedGLTextureIDs.size())
 					continue;
 
-				const auto glTextureID = EvilGlobalState.InterceptedGLTextureIDs[glTextureIndex];
+				const auto glTextureID = EvilGlobalState.InterceptedGLTextureIDs[interceptedIndex];
 				if (glTextureID == 0)
 					continue;
 
@@ -208,11 +214,11 @@ namespace SprTexReplace::Hooks
 
 		EvilGlobalState.WaitForAsyncDirectoryUpdate();
 
-		const auto setReplaceInfo = FindSprSetInfo(*thisSprSet);
-		if (setReplaceInfo == nullptr || setReplaceInfo->Textures.empty())
+		const auto matchingSetReplaceInfo = FindMatchingSprSetReplaceInfo(*thisSprSet);
+		if (matchingSetReplaceInfo == nullptr)
 			return EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
 
-		const auto wasAnyReplacementFound = UpdateTempSourceImageBuffer(*thisSprSet, *setReplaceInfo);
+		const auto wasAnyReplacementFound = LoadSourceImagesIntoTempBuffer(*thisSprSet, *matchingSetReplaceInfo);
 		if (!wasAnyReplacementFound)
 			return EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
 

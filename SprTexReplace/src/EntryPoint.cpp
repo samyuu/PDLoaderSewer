@@ -32,7 +32,7 @@ namespace SprTexReplace
 			return std::string(Path::GetDirectoryName(UTF8::Narrow(moduleFileName)));
 		}();
 
-		EvilGlobalState.UpdateWorkingDirectoryFilesAsync();
+		EvilGlobalState.IterateRegisterReplaceDirectoryFilePathsAsync();
 		InstallAllHooks(moduleHandle);
 	}
 

@@ -6,7 +6,7 @@
 
 namespace SprTexReplace
 {
-	class SourceImage
+	class SourceImage : NonCopyable
 	{
 	public:
 		static bool IsValidFileName(std::string_view sourcePath);

@@ -28,8 +28,11 @@ namespace SprTexReplace
 		SprSet() = delete;
 		~SprSet() = delete;
 
-		struct FileHandleThingy
+		struct FileHandleThingy : NonCopyable
 		{
+			FileHandleThingy() = delete;
+			~FileHandleThingy() = delete;
+
 			u32 field_0;
 			u32 field_4;
 			const void* field_8;
@@ -85,8 +88,12 @@ namespace SprTexReplace
 		size_t GetTextureCount() const;
 		std::string_view GetTextureName(size_t index) const;
 
-		struct FileHeaderData
+		// NOTE: These represent the data layout of the in memory file content and should therefore only ever be pointer casted
+		struct FileHeaderData : NonCopyable
 		{
+			FileHeaderData() = delete;
+			~FileHeaderData() = delete;
+
 			u32 Flags;
 			u32 TexSetOffset;
 			u32 TextureCount;
@@ -97,8 +104,11 @@ namespace SprTexReplace
 			u32 SpriteExtraDataOffset;
 		};
 
-		struct TextureData
+		struct TextureData : NonCopyable
 		{
+			TextureData() = delete;
+			~TextureData() = delete;
+
 			u32 Signature;
 			u32 MipMapCount;
 			u8 MipLevels;
@@ -122,7 +132,7 @@ namespace SprTexReplace
 			u32 MipIndex;
 			u32 ArrayIndex;
 			u32 DataSize;
-			u8 Data[];
+			u8 Data[/*DataSize*/];
 		};
 #pragma warning(pop)
 
