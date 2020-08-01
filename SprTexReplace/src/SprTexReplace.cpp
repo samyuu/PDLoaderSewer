@@ -48,6 +48,12 @@ namespace SprTexReplace
 		}
 	}
 
+	void PluginState::WaitForAsyncDirectoryUpdate()
+	{
+		if (EvilGlobalState.RegisteredReplaceInfoFuture.valid())
+			EvilGlobalState.RegisteredReplaceInfo = std::move(EvilGlobalState.RegisteredReplaceInfoFuture.get());
+	}
+
 	void PluginState::UpdateWorkingDirectoryFilesAsync()
 	{
 		EvilGlobalState.RegisteredReplaceInfoFuture = std::async(std::launch::async, []
@@ -76,19 +82,13 @@ namespace SprTexReplace
 {
 	namespace
 	{
-		void WaitForAsyncDirectoryUpdate()
-		{
-			if (EvilGlobalState.RegisteredReplaceInfoFuture.valid())
-				EvilGlobalState.RegisteredReplaceInfo = std::move(EvilGlobalState.RegisteredReplaceInfoFuture.get());
-		}
-
 		const SprSetInfo* FindSprSetInfo(const SprSet& sprSet)
 		{
 			const auto sprSetName = sprSet.GetSprName();
 			const auto found = std::find_if(
 				EvilGlobalState.RegisteredReplaceInfo.begin(),
 				EvilGlobalState.RegisteredReplaceInfo.end(),
-				[&](const auto& info) { return (info.SprSetName == sprSetName); });
+				[&](const auto& info) { return (info.SetName == sprSetName); });
 
 			return (found != EvilGlobalState.RegisteredReplaceInfo.end()) ? &(*found) : nullptr;
 		}
@@ -217,7 +217,7 @@ namespace SprTexReplace::Hooks
 		if (thisSprSet == nullptr)
 			return EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
 
-		WaitForAsyncDirectoryUpdate();
+		EvilGlobalState.WaitForAsyncDirectoryUpdate();
 
 		const auto setReplaceInfo = FindSprSetInfo(*thisSprSet);
 		if (setReplaceInfo == nullptr || setReplaceInfo->Textures.empty())

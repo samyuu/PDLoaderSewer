@@ -25,7 +25,7 @@ namespace SprTexReplace
 
 	struct SprSetInfo
 	{
-		std::string SprSetName;
+		std::string SetName;
 		std::vector<SprTexInfo> Textures;
 	};
 
@@ -45,9 +45,10 @@ namespace SprTexReplace
 
 		std::future<std::vector<SprSetInfo>> RegisteredReplaceInfoFuture;
 		std::vector<SprSetInfo> RegisteredReplaceInfo;
-		
+
 		std::vector<std::unique_ptr<SourceImage>> TempSourceImageBuffer;
 
+		void WaitForAsyncDirectoryUpdate();
 		void UpdateWorkingDirectoryFilesAsync();
 	};
 
