@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SprTexReplace", "SprTexRepl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginCommon", "PluginCommon\PluginCommon.vcxproj", "{B98E3DE5-EF06-4BF3-AEB0-B3F3B2D815A1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTex", "Dependencies\DirectXTex\DirectXTex.vcxproj", "{0895C15F-EF9C-4D4F-9A41-F62C197922DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{B98E3DE5-EF06-4BF3-AEB0-B3F3B2D815A1}.Debug|x64.Build.0 = Debug|x64
 		{B98E3DE5-EF06-4BF3-AEB0-B3F3B2D815A1}.Release|x64.ActiveCfg = Release|x64
 		{B98E3DE5-EF06-4BF3-AEB0-B3F3B2D815A1}.Release|x64.Build.0 = Release|x64
+		{0895C15F-EF9C-4D4F-9A41-F62C197922DC}.Debug|x64.ActiveCfg = Debug|x64
+		{0895C15F-EF9C-4D4F-9A41-F62C197922DC}.Debug|x64.Build.0 = Debug|x64
+		{0895C15F-EF9C-4D4F-9A41-F62C197922DC}.Release|x64.ActiveCfg = Release|x64
+		{0895C15F-EF9C-4D4F-9A41-F62C197922DC}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
