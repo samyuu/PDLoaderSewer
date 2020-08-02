@@ -84,8 +84,10 @@
     <ClCompile Include="src\UTF8.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ASCII.h" />
     <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\Path.h" />
+    <ClInclude Include="src\StringUtil.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\UTF8.h" />
   </ItemGroup>

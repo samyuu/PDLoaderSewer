@@ -32,5 +32,11 @@
     <ClInclude Include="src\Path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\StringUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ASCII.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
