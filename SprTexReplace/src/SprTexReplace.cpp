@@ -3,6 +3,7 @@
 #include "Path.h"
 #include "UTF8.h"
 #include "Log.h"
+#include "StringUtil.h"
 #include <filesystem>
 
 namespace SprTexReplace
@@ -17,11 +18,6 @@ namespace SprTexReplace
 
 	namespace
 	{
-		constexpr bool StartsWith(std::string_view string, std::string_view prefix)
-		{
-			return (string.size() >= prefix.size() && string.substr(0, prefix.size()) == prefix);
-		}
-
 		void TryRegisterSprTexReplacePath(const std::filesystem::path& texturePath, std::vector<SprTexInfo>& outResults)
 		{
 			const auto textureFileName = texturePath.filename().u8string();
@@ -35,8 +31,10 @@ namespace SprTexReplace
 
 		void TryRegisterSprSetReplaceDirectory(const std::filesystem::path& sprSetDirectory, std::vector<SprSetInfo>& outResults)
 		{
+			constexpr auto sprPrefixThatAllFArcsShouldHave = std::string_view { "spr_" };
+
 			auto directoryName = sprSetDirectory.filename().u8string();
-			if (!StartsWith(directoryName, "spr_") && !StartsWith(directoryName, "SPR_"))
+			if (!Util::StartsWithInsensitive(directoryName, sprPrefixThatAllFArcsShouldHave))
 				return;
 
 			auto& sprSetInfo = outResults.emplace_back(SprSetInfo { std::move(directoryName) });

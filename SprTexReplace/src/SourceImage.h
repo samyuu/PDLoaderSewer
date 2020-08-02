@@ -9,6 +9,9 @@ namespace SprTexReplace
 	class SourceImage : NonCopyable
 	{
 	public:
+		static constexpr std::string_view PNGExtension = ".png";
+		static constexpr std::string_view DDSExtension = ".dds";
+
 		static bool IsValidFileName(std::string_view sourcePath);
 
 	public:

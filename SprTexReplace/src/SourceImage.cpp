@@ -1,6 +1,7 @@
 #include "SourceImage.h"
 #include "Path.h"
 #include "UTF8.h"
+#include "StringUtil.h"
 #include <stb_image.h>
 
 namespace SprTexReplace
@@ -8,13 +9,13 @@ namespace SprTexReplace
 	bool SourceImage::IsValidFileName(std::string_view sourcePath)
 	{
 		const auto extension = Path::GetExtension(sourcePath);
-		return (extension == ".png" || extension == ".dds");
+		return Util::MatchesInsensitive(extension, PNGExtension) || Util::MatchesInsensitive(extension, DDSExtension);
 	}
 
 	SourceImage::SourceImage(std::string_view sourcePath) : filePath(sourcePath)
 	{
 		const auto extension = Path::GetExtension(sourcePath);
-		if (extension == ".png")
+		if (Util::MatchesInsensitive(extension, PNGExtension))
 		{
 			loadFuture = std::async(std::launch::async, [this]()
 			{
@@ -22,7 +23,7 @@ namespace SprTexReplace
 				stbImage.RGBAPixels = stbi_load(filePath.c_str(), &stbImage.Width, &stbImage.Height, &stbImage.Components, 4);
 			});
 		}
-		else if (extension == ".dds")
+		else if (Util::MatchesInsensitive(extension, DDSExtension))
 		{
 			loadFuture = std::async(std::launch::async, [this]()
 			{
