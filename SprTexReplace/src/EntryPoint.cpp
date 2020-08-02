@@ -24,10 +24,10 @@ namespace SprTexReplace
 
 	void OnDLLAttach(const HMODULE moduleHandle)
 	{
-		EvilGlobalState.WorkingDirectory = []
+		EvilGlobalState.ThisDLLDirectory = [moduleHandle]
 		{
 			WCHAR moduleFileName[MAX_PATH];
-			::GetModuleFileNameW(NULL, moduleFileName, MAX_PATH);
+			::GetModuleFileNameW(moduleHandle, moduleFileName, MAX_PATH);
 
 			return std::string(Path::GetDirectoryName(UTF8::Narrow(moduleFileName)));
 		}();

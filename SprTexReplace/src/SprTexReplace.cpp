@@ -57,7 +57,7 @@ namespace SprTexReplace
 		{
 			std::vector<SprSetInfo> results;
 
-			const auto directoryToSerach = (WorkingDirectory + "/" + SprTexReplaceSubDirectory);
+			const auto directoryToSerach = (ThisDLLDirectory + "/" + SprTexReplaceSubDirectory);
 			const auto directoryToSerachPath = std::filesystem::path(UTF8::WideArg(directoryToSerach).c_str());
 
 			try

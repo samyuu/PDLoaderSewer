@@ -36,8 +36,8 @@ namespace SprTexReplace
 		PluginState();
 		~PluginState() = default;
 
-		std::string SprTexReplaceSubDirectory = "plugins/spr_tex_replace";
-		std::string WorkingDirectory;
+		std::string SprTexReplaceSubDirectory = "spr_tex_replace";
+		std::string ThisDLLDirectory;
 
 		GLGenTextures_t* OriginalGLGenTextures = nullptr;
 		SprSetParseTexSet_t* OriginalParseSprSetTexSet = nullptr;
