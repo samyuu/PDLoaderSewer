@@ -47,7 +47,6 @@
     <ClInclude Include="src\SourceImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\FunctionHooker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\GLTextureUpload.h">

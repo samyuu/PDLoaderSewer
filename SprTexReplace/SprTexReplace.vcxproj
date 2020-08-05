@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Addresses.h" />
-    <ClInclude Include="src\FunctionHooker.h" />
     <ClInclude Include="src\GLTextureUpload.h" />
     <ClInclude Include="src\SourceImage.h" />
     <ClInclude Include="src\SprSet.h" />

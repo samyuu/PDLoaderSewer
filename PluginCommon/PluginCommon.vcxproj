@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ASCII.h" />
+    <ClInclude Include="src\FunctionHooker.h" />
     <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\Path.h" />
     <ClInclude Include="src\StringUtil.h" />
