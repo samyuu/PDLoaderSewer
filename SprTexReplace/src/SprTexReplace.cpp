@@ -124,7 +124,7 @@ namespace SprTexReplace
 			const auto anyReplacementFound = std::any_of(
 				EvilGlobalState.TempImageFileBuffer.begin(),
 				EvilGlobalState.TempImageFileBuffer.end(),
-				[&](const auto& image) { return image.has_value(); });;
+				[&](const auto& image) { return image.has_value(); });
 
 			return anyReplacementFound;
 		}
