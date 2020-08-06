@@ -1,8 +1,9 @@
 #pragma once
 #include "Types.h"
-#include "SourceImage.h"
 #include "SprSet.h"
+#include "Image/ImageFile.h"
 #include <vector>
+#include <optional>
 #include <future>
 
 namespace SprTexReplace
@@ -22,7 +23,7 @@ namespace SprTexReplace
 	struct SprTexInfo
 	{
 		std::string TextureName;
-		std::string ImageSourcePath;
+		std::string ImageFilePath;
 	};
 
 	struct SprSetInfo
@@ -48,7 +49,7 @@ namespace SprTexReplace
 		std::future<std::vector<SprSetInfo>> RegisteredReplaceInfoFuture;
 		std::vector<SprSetInfo> RegisteredReplaceInfo;
 
-		std::vector<std::unique_ptr<SourceImage>> TempSourceImageBuffer;
+		std::vector<std::optional<ImageFile>> TempImageFileBuffer;
 
 		void WaitForAsyncDirectoryUpdate();
 		void IterateRegisterReplaceDirectoryFilePathsAsync();

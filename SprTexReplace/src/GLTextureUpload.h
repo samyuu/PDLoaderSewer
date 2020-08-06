@@ -1,8 +1,10 @@
 #pragma once
 #include "Types.h"
-#include "SourceImage.h"
+#include "Image/ImageFile.h"
 
 namespace SprTexReplace
 {
-	void GLBindUploadImageViewTextureData(const SourceImage& sourceImage, const SourceImage::ImageView& imageView, const u32 textureID);
+	constexpr u32 InvalidGLTextureID = 0;
+
+	void GLBindUploadImageViewTextureData(const ImageFile& imageFile, const ImageFile::ImageView& imageView, const u32 textureID);
 }

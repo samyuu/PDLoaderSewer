@@ -21,16 +21,16 @@
     <ClCompile Include="src\SprTexReplace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\STBImage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\SprSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SourceImage.cpp">
+    <ClCompile Include="src\GLTextureUpload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\GLTextureUpload.cpp">
+    <ClCompile Include="src\Image\STBImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Image\ImageFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,12 +44,10 @@
     <ClInclude Include="src\Addresses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\SourceImage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\GLTextureUpload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Image\ImageFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

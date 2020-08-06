@@ -6,7 +6,7 @@
 
 namespace SprTexReplace
 {
-	class SourceImage : NonCopyable
+	class ImageFile : NonCopyable
 	{
 	public:
 		static constexpr std::string_view PNGExtension = ".png";
@@ -15,8 +15,9 @@ namespace SprTexReplace
 		static bool IsValidFileName(std::string_view sourcePath);
 
 	public:
-		SourceImage(std::string_view sourcePath);
-		~SourceImage();
+		ImageFile(std::string_view sourcePath);
+		ImageFile(ImageFile&& other);
+		~ImageFile();
 
 	public:
 		struct ImageView
@@ -28,11 +29,11 @@ namespace SprTexReplace
 			::DXGI_FORMAT Format;
 		};
 
-		ImageView GetImageView();
+		ImageView GetImageView() const;
 		std::string_view GetFilePath() const;
 
 	private:
-		std::future<void> loadFuture;
+		mutable std::future<void> loadFuture;
 		std::string filePath;
 
 		struct STBImageData

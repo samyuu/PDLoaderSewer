@@ -13,7 +13,9 @@ namespace SprTexReplace
 	PluginState::PluginState()
 	{
 		constexpr auto reasonablePerSprSetMaxTextureCount = 128;
+
 		InterceptedGLTextureIDs.reserve(reasonablePerSprSetMaxTextureCount);
+		TempImageFileBuffer.reserve(reasonablePerSprSetMaxTextureCount);
 	}
 
 	namespace
@@ -21,12 +23,12 @@ namespace SprTexReplace
 		void TryRegisterSprTexReplacePath(const std::filesystem::path& texturePath, std::vector<SprTexInfo>& outResults)
 		{
 			const auto textureFileName = texturePath.filename().u8string();
-			if (!SourceImage::IsValidFileName(textureFileName))
+			if (!ImageFile::IsValidFileName(textureFileName))
 				return;
 
 			auto& sprTexInfo = outResults.emplace_back();
 			sprTexInfo.TextureName = std::string(Path::TrimExtension(textureFileName));
-			sprTexInfo.ImageSourcePath = texturePath.u8string();
+			sprTexInfo.ImageFilePath = texturePath.u8string();
 		}
 
 		void TryRegisterSprSetReplaceDirectory(const std::filesystem::path& sprSetDirectory, std::vector<SprSetInfo>& outResults)
@@ -79,50 +81,52 @@ namespace SprTexReplace
 	{
 		const SprSetInfo* FindMatchingSprSetReplaceInfo(const SprSet& sprSet)
 		{
+			EvilGlobalState.WaitForAsyncDirectoryUpdate();
+
 			const auto setNameToFind = sprSet.GetSprName();
-			const auto found = std::find_if(
+			const auto foundReplacement = std::find_if(
 				EvilGlobalState.RegisteredReplaceInfo.begin(),
 				EvilGlobalState.RegisteredReplaceInfo.end(),
 				[&](const auto& info) { return (info.SetName == setNameToFind); });
 
-			return (found != EvilGlobalState.RegisteredReplaceInfo.end() && !found->Textures.empty()) ? &(*found) : nullptr;
+			return (foundReplacement != EvilGlobalState.RegisteredReplaceInfo.end() && !foundReplacement->Textures.empty()) ? &(*foundReplacement) : nullptr;
 		}
 
 		const SprTexInfo* FindMatchingSprTexReplaceInfo(const SprSet& sprSet, const size_t texIndex, const SprSetInfo& setInfo)
 		{
 			const auto textureNameToFind = sprSet.GetTextureName(texIndex);
-			const auto found = std::find_if(
+			const auto foundReplacement = std::find_if(
 				setInfo.Textures.begin(),
 				setInfo.Textures.end(),
 				[&](const auto& info) { return (info.TextureName == textureNameToFind); });
 
-			return (found != setInfo.Textures.end()) ? &(*found) : nullptr;
+			return (foundReplacement != setInfo.Textures.end()) ? &(*foundReplacement) : nullptr;
 		}
 
-		bool LoadSourceImagesIntoTempBuffer(const SprSet& sprSet, const SprSetInfo& setInfo)
+		bool LoadImageFilesIntoTempBuffer(const SprSet& sprSet, const SprSetInfo& setInfo)
 		{
 			const auto textureCount = sprSet.GetTextureCount();
 
-			EvilGlobalState.TempSourceImageBuffer.clear();
-			EvilGlobalState.TempSourceImageBuffer.reserve(textureCount);
+			EvilGlobalState.TempImageFileBuffer.clear();
+			EvilGlobalState.TempImageFileBuffer.reserve(textureCount);
 
-			bool anyFound = false;
 			for (size_t textureIndex = 0; textureIndex < textureCount; textureIndex++)
 			{
+				// TODO: Instead of loading textures just in time it'd be a lot more efficient to async load them at the same time the original farc is read
 				const auto replaceInfo = FindMatchingSprTexReplaceInfo(sprSet, textureIndex, setInfo);
-				if (replaceInfo == nullptr)
-				{
-					EvilGlobalState.TempSourceImageBuffer.emplace_back(nullptr);
-				}
+
+				if (replaceInfo != nullptr)
+					EvilGlobalState.TempImageFileBuffer.emplace_back(replaceInfo->ImageFilePath);
 				else
-				{
-					// TODO: Instead of loading textures just in time it'd be a lot more favorable to load them at the same time the original farc is read
-					EvilGlobalState.TempSourceImageBuffer.emplace_back(std::make_unique<SourceImage>(replaceInfo->ImageSourcePath));
-					anyFound = true;
-				}
+					EvilGlobalState.TempImageFileBuffer.push_back(std::nullopt);
 			}
 
-			return anyFound;
+			const auto anyReplacementFound = std::any_of(
+				EvilGlobalState.TempImageFileBuffer.begin(),
+				EvilGlobalState.TempImageFileBuffer.end(),
+				[&](const auto& image) { return image.has_value(); });;
+
+			return anyReplacementFound;
 		}
 
 		void PreventYCbCrTextureDetection(SprSet& sprSet, const size_t textureIndex)
@@ -145,27 +149,25 @@ namespace SprTexReplace
 		{
 			for (size_t textureIndex = 0; textureIndex < sprSet.GetTextureCount(); textureIndex++)
 			{
-				if (EvilGlobalState.TempSourceImageBuffer[textureIndex] == nullptr)
-					continue;
-
-				PreventYCbCrTextureDetection(sprSet, textureIndex);
+				if (EvilGlobalState.TempImageFileBuffer[textureIndex].has_value())
+					PreventYCbCrTextureDetection(sprSet, textureIndex);
 			}
 		}
 
-		void UploadSourceImageToGLTexture(SourceImage& sourceImage, const u32 glTextureID)
+		void UploadImageFileToGLTexture(const ImageFile& imageFile, const u32 glTextureID)
 		{
-			// BUG: Potential bug if the source image failes to load but the YCbCr textures have already been pre-load edited
-			const auto imageView = sourceImage.GetImageView();
+			// BUG: Potential bug if the source image file failes to load but the YCbCr textures have already been pre-load edited
+			const auto imageView = imageFile.GetImageView();
 
 			if (imageView.Data == nullptr || imageView.Width < 1 || imageView.Height < 1)
 			{
-				const auto sourcePath = sourceImage.GetFilePath();
-				LOG_WRITELINE("Failed to load '%.*s'! Corrupted YCbCr textures expected.", static_cast<int>(sourcePath.size()), sourcePath.data());
+				const auto imageFilePath = imageFile.GetFilePath();
+				LOG_WRITELINE("Failed to load '%.*s'! Corrupted YCbCr textures expected.", static_cast<int>(imageFilePath.size()), imageFilePath.data());
 
 				return;
 			}
 
-			GLBindUploadImageViewTextureData(sourceImage, imageView, glTextureID);
+			GLBindUploadImageViewTextureData(imageFile, imageView, glTextureID);
 		}
 
 		void DoSprSetTexReplacementsPostLoad(const SprSet& sprSet)
@@ -173,19 +175,20 @@ namespace SprTexReplace
 			const auto textureCount = sprSet.GetTextureCount();
 			for (size_t textureIndex = 0; textureIndex < textureCount; textureIndex++)
 			{
-				auto sourceImage = EvilGlobalState.TempSourceImageBuffer[textureIndex].get();
-				if (sourceImage == nullptr)
+				if (!EvilGlobalState.TempImageFileBuffer[textureIndex].has_value())
 					continue;
+
+				const auto& imageFile = EvilGlobalState.TempImageFileBuffer[textureIndex].value();
 
 				const auto interceptedIndex = EvilGlobalState.InterceptedGLTextureIDs.size() - textureCount + textureIndex;
 				if (interceptedIndex >= EvilGlobalState.InterceptedGLTextureIDs.size())
 					continue;
 
 				const auto glTextureID = EvilGlobalState.InterceptedGLTextureIDs[interceptedIndex];
-				if (glTextureID == 0)
+				if (glTextureID == InvalidGLTextureID)
 					continue;
 
-				UploadSourceImageToGLTexture(*sourceImage, glTextureID);
+				UploadImageFileToGLTexture(imageFile, glTextureID);
 			}
 		}
 	}
@@ -201,7 +204,7 @@ namespace SprTexReplace::Hooks
 		if (EvilGlobalState.GenTexturesHookEnabled)
 		{
 			for (size_t i = 0; i < count; i++)
-				EvilGlobalState.InterceptedGLTextureIDs.push_back((outGLTexIDs != nullptr) ? outGLTexIDs[i] : 0);
+				EvilGlobalState.InterceptedGLTextureIDs.push_back((outGLTexIDs != nullptr) ? outGLTexIDs[i] : InvalidGLTextureID);
 		}
 	}
 
@@ -210,14 +213,12 @@ namespace SprTexReplace::Hooks
 		if (thisSprSet == nullptr)
 			return EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
 
-		EvilGlobalState.WaitForAsyncDirectoryUpdate();
-
 		const auto matchingSetReplaceInfo = FindMatchingSprSetReplaceInfo(*thisSprSet);
 		if (matchingSetReplaceInfo == nullptr)
 			return EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
 
-		const auto wasAnyReplacementFound = LoadSourceImagesIntoTempBuffer(*thisSprSet, *matchingSetReplaceInfo);
-		if (!wasAnyReplacementFound)
+		const auto anyReplacementFound = LoadImageFilesIntoTempBuffer(*thisSprSet, *matchingSetReplaceInfo);
+		if (!anyReplacementFound)
 			return EvilGlobalState.OriginalParseSprSetTexSet(thisSprSet);
 
 		DoSprSetTexReplacementsPreLoad(*thisSprSet);
@@ -230,6 +231,7 @@ namespace SprTexReplace::Hooks
 		EvilGlobalState.GenTexturesHookEnabled = false;
 
 		DoSprSetTexReplacementsPostLoad(*thisSprSet);
+		EvilGlobalState.TempImageFileBuffer.clear();
 
 		return originalReturnValue;
 	}

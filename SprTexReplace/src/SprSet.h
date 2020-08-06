@@ -39,13 +39,6 @@ namespace SprTexReplace
 			u32 field_10;
 			u32 field_14;
 			const char* FArcPath;
-#if 0
-			u32 field_1C;
-			u32 field_20;
-			u32 field_24;
-			u32 field_28;
-			const char* FileName;
-#endif
 		};
 
 		const void* vftable;
@@ -69,9 +62,6 @@ namespace SprTexReplace
 		u8 field_44;
 		u8 field_48;
 		u8 field_4C;
-#if 0
-		const char* FileName;
-#endif
 
 		// NOTE: ./rom/2d/spr_{file_name}.farc
 		std::string_view GetFArcPath() const;

@@ -53,9 +53,9 @@ namespace SprTexReplace
 		}
 	}
 
-	void GLBindUploadImageViewTextureData(const SourceImage& sourceImage, const SourceImage::ImageView& imageView, const u32 glTextureID)
+	void GLBindUploadImageViewTextureData(const ImageFile& imageFile, const ImageFile::ImageView& imageView, const u32 glTextureID)
 	{
-		assert(imageView.Data != nullptr);
+		assert(imageView.Data != nullptr && glTextureID != InvalidGLTextureID);
 
 		// NOTE: Since this only applies to sprite textures we only ever care about the first mipmap
 		constexpr auto baseMipLevel = 0, border = 0;
