@@ -12,14 +12,7 @@ namespace SprTexReplace
 	{
 		auto functionHooker = FunctionHooker(moduleHandle);
 		functionHooker.Hook(Addresses::SprSetParseTexSet, EvilGlobalState.OriginalParseSprSetTexSet, Hooks::SprSetParseTexSet);
-
-		functionHooker.MakeMemoryWritable(Addresses::GLGenTexturesExtern, sizeof(void*), []
-		{
-			std::memcpy(reinterpret_cast<void*>(&EvilGlobalState.OriginalGLGenTextures), reinterpret_cast<const void*>(Addresses::GLGenTexturesExtern), sizeof(const void*));
-
-			const auto glGenTexturesHook = &Hooks::GLGenTextures;
-			std::memcpy(reinterpret_cast<void*>(Addresses::GLGenTexturesExtern), &glGenTexturesHook, sizeof(glGenTexturesHook));
-		});
+		functionHooker.HookPointer(Addresses::GLGenTexturesExtern, EvilGlobalState.OriginalGLGenTextures, Hooks::GLGenTextures);
 	}
 
 	void OnDLLAttach(const HMODULE moduleHandle)
@@ -36,7 +29,7 @@ namespace SprTexReplace
 		InstallAllHooks(moduleHandle);
 	}
 
-	void OnDLLDetach(HMODULE moduleHandle)
+	void OnDLLDetach(const HMODULE moduleHandle)
 	{
 	}
 }

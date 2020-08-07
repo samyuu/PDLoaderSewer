@@ -22,8 +22,22 @@ namespace SprTexReplace
 		template <typename Func>
 		void Hook(const u64 address, Func*& outOriginalFunc, Func& onHookFunc)
 		{
+			static_assert(std::is_function_v<Func>);
+
 			outOriginalFunc = reinterpret_cast<Func*>(address);
 			::DetourAttach(reinterpret_cast<PVOID*>(&outOriginalFunc), &onHookFunc);
+		}
+
+		template <typename Func>
+		void HookPointer(const u64 address, Func*& outOriginalFunc, Func& onHookFunc)
+		{
+			static_assert(std::is_function_v<Func>);
+
+			MakeMemoryWritable(address, sizeof(Func**), [&]
+			{
+				outOriginalFunc = *reinterpret_cast<Func**>(address);
+				*reinterpret_cast<Func**>(address) = &onHookFunc;
+			});
 		}
 
 		template <typename Func>
